@@ -1,10 +1,14 @@
-import sys
+"""
+Click Speed Game - Integrated version for launcher
+Place this file as: games/click_game.py
+"""
+
 import random
 import math
 from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QMessageBox
-from PyQt6.QtCore import Qt, QTimer, QPoint, QPropertyAnimation, QEasingCurve, pyqtProperty
-from PyQt6.QtGui import QPainter, QPen, QColor, QFont, QPainterPath, QRegion
-from PyQt6.QtMultimedia import QSoundEffect, QAudioOutput
+from PyQt6.QtCore import Qt, QTimer, QPoint, pyqtSignal
+from PyQt6.QtGui import QPainter, QPen, QColor, QFont
+from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtCore import QUrl
 
 
@@ -23,10 +27,15 @@ class Circle:
 
 
 class ClickSpeedGame(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Click Speed Game")
-        self.setGeometry(100, 100, 800, 600)
+    game_ended = pyqtSignal(int)
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("🎯 Click Speed Game")
+        
+        # Get screen size and set window to full screen
+        screen = QApplication.primaryScreen().geometry()
+        self.setGeometry(screen)
         
         # Make window frameless and transparent
         self.setWindowFlags(
@@ -70,9 +79,16 @@ class ClickSpeedGame(QMainWindow):
     
     def setup_ui(self):
         """Setup the initial UI with start button"""
-        # Start button
-        self.start_button = QPushButton("Start Game", self)
-        self.start_button.setGeometry(300, 250, 200, 60)
+        # Start button - centered in screen
+        button_width = 200
+        button_height = 60
+        self.start_button = QPushButton("▶ Start Game", self)
+        self.start_button.setGeometry(
+            (self.width() - button_width) // 2,
+            (self.height() - button_height) // 2,
+            button_width,
+            button_height
+        )
         self.start_button.clicked.connect(self.start_game)
         
         # Modern button styling
@@ -109,6 +125,21 @@ class ClickSpeedGame(QMainWindow):
         """)
         self.score_label.hide()
         
+        # Timer label (shows remaining time)
+        self.timer_label = QLabel("Time: 2.0s", self)
+        self.timer_label.setGeometry(self.width() - 170, 20, 150, 40)
+        self.timer_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                background-color: rgba(0, 0, 0, 150);
+                border-radius: 20px;
+                padding: 10px;
+                font-size: 18px;
+                font-weight: bold;
+            }
+        """)
+        self.timer_label.hide()
+        
         # Close button (small X in corner)
         self.close_button = QPushButton("✕", self)
         self.close_button.setGeometry(self.width() - 40, 10, 30, 30)
@@ -126,11 +157,27 @@ class ClickSpeedGame(QMainWindow):
                 background-color: rgba(255, 120, 120, 230);
             }
         """)
+        
+        # Title label - centered higher up
+        self.title_label = QLabel("🎯 CLICK SPEED GAME", self)
+        self.title_label.setGeometry(0, self.height() // 4, self.width(), 60)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title_label.setStyleSheet("""
+            QLabel {
+                color: white;
+                font-size: 32px;
+                font-weight: bold;
+                background: transparent;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            }
+        """)
     
     def start_game(self):
         """Start the game"""
         self.start_button.hide()
+        self.title_label.hide()
         self.score_label.show()
+        self.timer_label.show()
         self.game_active = True
         self.score = 0
         self.update_score()
@@ -151,11 +198,51 @@ class ClickSpeedGame(QMainWindow):
         
         # Start the game timer
         self.game_timer.start(self.time_limit)
+        self.remaining_time = self.time_limit
+        
+        # Timer display update
+        self.display_timer = QTimer()
+        self.display_timer.timeout.connect(self.update_timer_display)
+        self.display_timer.start(100)  # Update every 100ms
         
         # Fade in animation
         self.animate_fade_in()
         
         self.update()
+    
+    def update_timer_display(self):
+        """Update the timer display"""
+        self.remaining_time -= 100
+        if self.remaining_time <= 0:
+            self.remaining_time = 0
+            self.display_timer.stop()
+        
+        time_seconds = self.remaining_time / 1000.0
+        self.timer_label.setText(f"Time: {time_seconds:.1f}s")
+        
+        # Change color when time is running out
+        if time_seconds < 0.5:
+            self.timer_label.setStyleSheet("""
+                QLabel {
+                    color: white;
+                    background-color: rgba(255, 50, 50, 200);
+                    border-radius: 20px;
+                    padding: 10px;
+                    font-size: 18px;
+                    font-weight: bold;
+                }
+            """)
+        else:
+            self.timer_label.setStyleSheet("""
+                QLabel {
+                    color: white;
+                    background-color: rgba(0, 0, 0, 150);
+                    border-radius: 20px;
+                    padding: 10px;
+                    font-size: 18px;
+                    font-weight: bold;
+                }
+            """)
     
     def animate_fade_in(self):
         """Fade in animation for new circle"""
@@ -192,14 +279,18 @@ class ClickSpeedGame(QMainWindow):
         self.game_active = False
         self.game_timer.stop()
         self.animation_timer.stop()
+        if hasattr(self, 'display_timer'):
+            self.display_timer.stop()
         self.current_circle = None
         self.score_label.hide()
+        self.timer_label.hide()
+        self.title_label.show()
         self.update()
         
         # Show game over message
         msg = QMessageBox(self)
         msg.setWindowTitle("Game Over")
-        msg.setText(f"Game Over!\n\nYour score: {self.score}")
+        msg.setText(f"⏱️ Time's Up!\n\n🎯 Your score: {self.score}\n\n{'🏆 New Record!' if self.score > 10 else '💪 Try Again!'}")
         msg.setStyleSheet("""
             QMessageBox {
                 background-color: rgba(50, 50, 50, 250);
@@ -215,6 +306,10 @@ class ClickSpeedGame(QMainWindow):
                 border-radius: 10px;
                 padding: 8px 20px;
                 font-size: 14px;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background-color: rgba(120, 220, 255, 230);
             }
         """)
         msg.exec()
@@ -241,6 +336,8 @@ class ClickSpeedGame(QMainWindow):
                     
                     # Animate fade out and spawn new circle
                     self.game_timer.stop()
+                    if hasattr(self, 'display_timer'):
+                        self.display_timer.stop()
                     self.animate_fade_out()
             else:
                 # Allow dragging window when not in game
@@ -263,7 +360,12 @@ class ClickSpeedGame(QMainWindow):
             # Darker background when game over
             painter.fillRect(self.rect(), QColor(30, 30, 30, 100))
         else:
-            painter.fillRect(self.rect(), QColor(20, 20, 20, 50))
+            # Gradient background
+            from PyQt6.QtGui import QLinearGradient
+            gradient = QLinearGradient(0, 0, 0, self.height())
+            gradient.setColorAt(0, QColor(20, 30, 50, 120))
+            gradient.setColorAt(1, QColor(40, 20, 60, 120))
+            painter.fillRect(self.rect(), gradient)
         
         # Draw circle if game is active
         if self.current_circle and self.game_active:
@@ -278,26 +380,28 @@ class ClickSpeedGame(QMainWindow):
                 int(self.current_circle.radius * 2),
                 int(self.current_circle.radius * 2)
             )
+            
+            # Draw crosshair in center
+            pen.setColor(QColor(255, 255, 255, int(150 * self.circle_opacity)))
+            pen.setWidth(1)
+            painter.setPen(pen)
+            center_x = int(self.current_circle.x)
+            center_y = int(self.current_circle.y)
+            painter.drawLine(center_x - 5, center_y, center_x + 5, center_y)
+            painter.drawLine(center_x, center_y - 5, center_x, center_y + 5)
     
     def resizeEvent(self, event):
         """Handle window resize"""
         super().resizeEvent(event)
         # Reposition close button
         self.close_button.move(self.width() - 40, 10)
+        # Reposition timer label
+        self.timer_label.move(self.width() - 170, 20)
         # Reposition start button
         self.start_button.setGeometry(
             self.width()//2 - 100,
             self.height()//2 - 30,
             200, 60
         )
-
-
-def main():
-    app = QApplication(sys.argv)
-    game = ClickSpeedGame()
-    game.show()
-    sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()
+        # Reposition title
+        self.title_label.setGeometry(0, self.height() // 4, self.width(), 60)
