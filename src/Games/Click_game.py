@@ -284,39 +284,41 @@ class ClickSpeedGame(QMainWindow):
         self.current_circle = None
         self.score_label.hide()
         self.timer_label.hide()
-        self.title_label.show()
-        self.update()
         
-        # Show game over message
-        msg = QMessageBox(self)
-        msg.setWindowTitle("Game Over")
-        msg.setText(f"⏱️ Time's Up!\n\n🎯 Your score: {self.score}\n\n{'🏆 New Record!' if self.score > 10 else '💪 Try Again!'}")
-        msg.setStyleSheet("""
-            QMessageBox {
-                background-color: rgba(50, 50, 50, 250);
-            }
+        # Create game over label if it doesn't exist
+        if not hasattr(self, 'game_over_label'):
+            self.game_over_label = QLabel("", self)
+            self.game_over_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.game_over_label.setGeometry(0, self.height()//2 - 100, self.width(), 200)
+            
+        # Set game over text with modern emoji and formatting
+        self.game_over_label.setText(
+            "⏱️ TIME'S UP! ⏱️\n" + f"🎯 Score: {self.score}\n" 
+        )
+        
+        # Modern styling matching brick game
+        self.game_over_label.setStyleSheet("""
             QLabel {
                 color: white;
-                font-size: 16px;
-            }
-            QPushButton {
-                background-color: rgba(100, 200, 255, 200);
-                color: white;
-                border: none;
-                border-radius: 10px;
-                padding: 8px 20px;
-                font-size: 14px;
-                min-width: 80px;
-            }
-            QPushButton:hover {
-                background-color: rgba(120, 220, 255, 230);
+                background-color: rgba(0, 0, 0, 220);
+                border: 3px solid rgba(100, 200, 255, 200);
+                border-radius: 40px;
+                font-size: 32px;
+                font-weight: bold;
+                padding: 40px;
+                margin: 20px;
+                line-height: 1.5;
             }
         """)
-        msg.exec()
         
-        # Reset game
-        self.score = 0
-        self.start_button.show()
+        self.game_over_label.show()
+        self.update()
+        
+        # Emit score signal
+        self.game_ended.emit(self.score)
+        
+        # Hide game over label after delay
+        QTimer.singleShot(2000, self.game_over_label.hide)
     
     def mousePressEvent(self, event):
         """Handle mouse clicks"""
