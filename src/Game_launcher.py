@@ -15,6 +15,7 @@ from PyQt6.QtGui import QPainter, QColor, QFont, QLinearGradient
 # Import games
 from Games.Click_game import ClickSpeedGame
 from Games.Brick_game import BrickBreakerGame
+from Games.Memory_game import MemoryMatchGame
 
 
 class ModernButton(QPushButton):
@@ -29,22 +30,23 @@ class ModernButton(QPushButton):
         
     def setup_style(self):
         """Setup modern button styling"""
-        self.setFixedSize(200, 80)
+        # Reduce button size
+        self.setFixedSize(180, 60)  # Reduced from 200x80
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("""
             QPushButton {
                 background-color: rgba(70, 150, 230, 200);
                 color: white;
                 border: 3px solid rgba(120, 200, 255, 180);
-                border-radius: 25px;
-                font-size: 18px;
+                border-radius: 20px;  /* Reduced from 25px */
+                font-size: 16px;      /* Reduced from 18px */
                 font-weight: bold;
-                padding: 15px;
+                padding: 10px;        /* Reduced from 15px */
             }
             QPushButton:hover {
                 background-color: rgba(90, 170, 250, 240);
                 border: 3px solid rgba(140, 220, 255, 220);
-                font-size: 19px;
+                font-size: 17px;      /* Reduced from 19px */
             }
             QPushButton:pressed {
                 background-color: rgba(60, 140, 220, 220);
@@ -206,8 +208,12 @@ class GameLauncher(QMainWindow):
         self.brick_game_btn = ModernButton("Brick Game", "🧱")
         self.brick_game_btn.clicked.connect(self.launch_brick_game)
         
+        self.memory_game_btn = ModernButton("Memory Game", "🧠")
+        self.memory_game_btn.clicked.connect(self.launch_memory_game)
+        
         button_layout.addWidget(self.click_game_btn)
         button_layout.addWidget(self.brick_game_btn)
+        button_layout.addWidget(self.memory_game_btn)
         
         # Center button container
         button_wrapper = QWidget()
@@ -292,6 +298,17 @@ class GameLauncher(QMainWindow):
         self.active_game.game_ended.connect(self.on_brick_game_ended)
         self.active_game.show()
         
+    def launch_memory_game(self):
+        """Launch Memory Match Game"""
+        self.fade_out()
+        QTimer.singleShot(450, self._show_memory_game)
+        
+    def _show_memory_game(self):
+        """Show memory game after fade out"""
+        self.active_game = MemoryMatchGame(self)
+        self.active_game.game_ended.connect(self.on_memory_game_ended)
+        self.active_game.show()
+        
     def on_click_game_ended(self, score):
         """Handle click game ended"""
         self.update_high_score("click_game", score)
@@ -300,6 +317,11 @@ class GameLauncher(QMainWindow):
     def on_brick_game_ended(self, score):
         """Handle brick game ended"""
         self.update_high_score("brick_game", score)
+        QTimer.singleShot(2000, self.return_to_launcher)
+        
+    def on_memory_game_ended(self, moves):
+        """Handle memory game ended"""
+        # Optional: Add high score tracking for memory game if desired
         QTimer.singleShot(2000, self.return_to_launcher)
         
     def return_to_launcher(self):

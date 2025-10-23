@@ -5,8 +5,10 @@ Place this file as: games/__init__.py
 
 from Games.Click_game import ClickSpeedGame
 from Games.Brick_game import BrickBreakerGame
+from Games.Memory_game import MemoryMatchGame
 
 __all__ = [
     'ClickSpeedGame',
     'BrickBreakerGame',
+    'MemoryMatchGame',
 ]
