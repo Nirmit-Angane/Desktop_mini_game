@@ -77,7 +77,7 @@ class Card(QPushButton):
                     background-color: rgba(50, 90, 160, 180);
                 }
             """)
-            self.setText("❓")
+            self.setText("❔")
     
     def flip_to_show(self):
         """Flip card to show icon"""

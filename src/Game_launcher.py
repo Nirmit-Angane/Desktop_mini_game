@@ -10,12 +10,15 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton,
                               QWidget, QHBoxLayout, QVBoxLayout, QLabel,
                               QGraphicsOpacityEffect, QGraphicsBlurEffect)
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QRect
-from PyQt6.QtGui import QPainter, QColor, QFont, QLinearGradient
+from PyQt6.QtGui import QPainter, QColor, QFont, QLinearGradient, QKeySequence, QShortcut
 
 # Import games
 from Games.Click_game import ClickSpeedGame
 from Games.Brick_game import BrickBreakerGame
 from Games.Memory_game import MemoryMatchGame
+
+import win32gui
+import win32con
 
 
 class ModernButton(QPushButton):
@@ -65,6 +68,9 @@ class GameLauncher(QMainWindow):
         self.setup_window()
         self.setup_ui()
         self.setup_animations()
+        
+        # Setup global shortcut
+        self.setup_global_shortcut()
         
     def load_settings(self):
         """Load settings and scores from JSON file"""
@@ -318,22 +324,24 @@ class GameLauncher(QMainWindow):
     def on_click_game_ended(self, score):
         """Handle click game ended"""
         self.update_high_score("click_game", score)
-        QTimer.singleShot(2000, self.return_to_launcher)
-        
+        # Remove auto-close timer
+        self.return_to_launcher()
+    
     def on_brick_game_ended(self, score):
         """Handle brick game ended"""
         self.update_high_score("brick_game", score)
-        QTimer.singleShot(2000, self.return_to_launcher)
-        
+        # Remove auto-close timer
+        self.return_to_launcher()
+    
     def on_memory_game_ended(self, moves):
         """Handle memory game ended"""
-        # Update high score if moves is lower (better score)
         current_high = self.settings["high_scores"].get("memory_game", 999)
         if moves < current_high:
             self.settings["high_scores"]["memory_game"] = moves
             self.save_settings()
             self.update_score_display()
-        QTimer.singleShot(2000, self.return_to_launcher)
+        # Remove auto-close timer
+        self.return_to_launcher()
         
     def return_to_launcher(self):
         """Return to launcher after game ends"""
@@ -370,6 +378,22 @@ class GameLauncher(QMainWindow):
         """Handle key press events"""
         if event.key() == Qt.Key.Key_Escape:
             self.close_launcher()
+    
+    def setup_global_shortcut(self):
+        """Setup global shortcut to show/hide launcher"""
+        self.shortcut = QShortcut(QKeySequence("Space+G"), self)
+        self.shortcut.activated.connect(self.toggle_visibility)
+        
+    def toggle_visibility(self):
+        """Toggle launcher visibility"""
+        if self.isVisible():
+            self.fade_out()
+        else:
+            # Bring window to front
+            self.fade_in()
+            self.setWindowState(self.windowState() & ~Qt.WindowState.WindowMinimized)
+            self.activateWindow()
+            win32gui.SetForegroundWindow(int(self.winId()))
 
 
 def main():
@@ -383,6 +407,11 @@ def main():
     
     launcher = GameLauncher()
     launcher.show()
+    
+    # Set window attributes for startup
+    hwnd = int(launcher.winId())
+    win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, 
+                         win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
     
     sys.exit(app.exec())
 

@@ -10,6 +10,7 @@ from PyQt6.QtCore import Qt, QTimer, QPoint, pyqtSignal
 from PyQt6.QtGui import QPainter, QPen, QColor, QFont
 from PyQt6.QtMultimedia import QSoundEffect
 from PyQt6.QtCore import QUrl
+from collections import deque
 
 
 class Circle:
@@ -58,6 +59,9 @@ class ClickSpeedGame(QMainWindow):
         # For dragging window
         self.drag_position = QPoint()
         
+        # Mouse trail
+        self.mouse_trail = deque(maxlen=10)  # Store last 10 positions
+        
         # Setup UI
         self.setup_ui()
         
@@ -76,6 +80,11 @@ class ClickSpeedGame(QMainWindow):
             self.click_sound.setVolume(0.5)
         except:
             self.click_sound = None
+        
+        # Timer for mouse trail fading
+        self.trail_timer = QTimer()
+        self.trail_timer.timeout.connect(self.fade_trail)
+        self.trail_timer.start(50)  # Update every 50ms
     
     def setup_ui(self):
         """Setup the initial UI with start button"""
@@ -347,10 +356,24 @@ class ClickSpeedGame(QMainWindow):
                     self.drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
     
     def mouseMoveEvent(self, event):
-        """Handle window dragging"""
+        """Handle window dragging and track mouse movement for trail"""
         if not self.game_active and event.buttons() == Qt.MouseButton.LeftButton:
             if not self.drag_position.isNull():
                 self.move(event.globalPosition().toPoint() - self.drag_position)
+        elif self.game_active:
+            self.mouse_trail.append((event.pos(), 1.0))  # Position and opacity
+        
+        super().mouseMoveEvent(event)
+    
+    def fade_trail(self):
+        """Fade out trail points"""
+        if self.mouse_trail:
+            new_trail = deque(maxlen=10)
+            for pos, opacity in self.mouse_trail:
+                if opacity > 0.1:
+                    new_trail.append((pos, opacity * 0.85))
+            self.mouse_trail = new_trail
+            self.update()
     
     def paintEvent(self, event):
         """Draw the game elements"""
@@ -368,6 +391,12 @@ class ClickSpeedGame(QMainWindow):
             gradient.setColorAt(0, QColor(20, 30, 50, 120))
             gradient.setColorAt(1, QColor(40, 20, 60, 120))
             painter.fillRect(self.rect(), gradient)
+        
+        # Draw mouse trail
+        if self.game_active:
+            for pos, opacity in self.mouse_trail:
+                painter.setPen(QPen(QColor(255, 255, 255, int(255 * opacity)), 3))
+                painter.drawPoint(pos)
         
         # Draw circle if game is active
         if self.current_circle and self.game_active:
