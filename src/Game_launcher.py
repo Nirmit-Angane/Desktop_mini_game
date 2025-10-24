@@ -10,15 +10,12 @@ from PyQt6.QtWidgets import (QApplication, QMainWindow, QPushButton,
                               QWidget, QHBoxLayout, QVBoxLayout, QLabel,
                               QGraphicsOpacityEffect, QGraphicsBlurEffect)
 from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, QRect
-from PyQt6.QtGui import QPainter, QColor, QFont, QLinearGradient, QKeySequence, QShortcut
+from PyQt6.QtGui import QPainter, QColor, QFont, QLinearGradient
 
 # Import games
 from Games.Click_game import ClickSpeedGame
 from Games.Brick_game import BrickBreakerGame
 from Games.Memory_game import MemoryMatchGame
-
-import win32gui
-import win32con
 
 
 class ModernButton(QPushButton):
@@ -33,23 +30,22 @@ class ModernButton(QPushButton):
         
     def setup_style(self):
         """Setup modern button styling"""
-        # Reduce button size
-        self.setFixedSize(180, 60)  # Reduced from 200x80
+        self.setFixedSize(200, 80)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setStyleSheet("""
             QPushButton {
                 background-color: rgba(70, 150, 230, 200);
                 color: white;
                 border: 3px solid rgba(120, 200, 255, 180);
-                border-radius: 20px;  /* Reduced from 25px */
-                font-size: 16px;      /* Reduced from 18px */
+                border-radius: 25px;
+                font-size: 18px;
                 font-weight: bold;
-                padding: 10px;        /* Reduced from 15px */
+                padding: 15px;
             }
             QPushButton:hover {
                 background-color: rgba(90, 170, 250, 240);
                 border: 3px solid rgba(140, 220, 255, 220);
-                font-size: 17px;      /* Reduced from 19px */
+                font-size: 19px;
             }
             QPushButton:pressed {
                 background-color: rgba(60, 140, 220, 220);
@@ -69,9 +65,6 @@ class GameLauncher(QMainWindow):
         self.setup_ui()
         self.setup_animations()
         
-        # Setup global shortcut
-        self.setup_global_shortcut()
-        
     def load_settings(self):
         """Load settings and scores from JSON file"""
         os.makedirs("data", exist_ok=True)
@@ -84,7 +77,7 @@ class GameLauncher(QMainWindow):
                     "high_scores": {
                         "click_game": 0,
                         "brick_game": 0,
-                        "memory_game": 999  # Lower is better for memory game
+                        "memory_game": 999
                     }
                 }
                 self.save_settings()
@@ -216,7 +209,7 @@ class GameLauncher(QMainWindow):
         self.brick_game_btn = ModernButton("Brick Game", "🧱")
         self.brick_game_btn.clicked.connect(self.launch_brick_game)
         
-        self.memory_game_btn = ModernButton("Memory Game", "🧠")
+        self.memory_game_btn = ModernButton("Memory Match", "🧠")
         self.memory_game_btn.clicked.connect(self.launch_memory_game)
         
         button_layout.addWidget(self.click_game_btn)
@@ -261,11 +254,8 @@ class GameLauncher(QMainWindow):
         click_score = self.settings["high_scores"].get("click_game", 0)
         brick_score = self.settings["high_scores"].get("brick_game", 0)
         memory_score = self.settings["high_scores"].get("memory_game", 999)
-        
         self.score_label.setText(
-            f"🏆 High Scores  |  🎯 Click: {click_score}  |  "
-            f"🧱 Brick: {brick_score}  |  "
-            f"🧠 Memory: {memory_score} moves"
+            f"🏆 High Scores  |  🎯 Click: {click_score}  |  🧱 Brick: {brick_score}  |  🧠 Memory: {memory_score} moves"
         )
         
     def setup_animations(self):
@@ -324,30 +314,27 @@ class GameLauncher(QMainWindow):
     def on_click_game_ended(self, score):
         """Handle click game ended"""
         self.update_high_score("click_game", score)
-        # Remove auto-close timer
-        self.return_to_launcher()
-    
+        # Don't automatically return - wait for game window to close
+        
     def on_brick_game_ended(self, score):
         """Handle brick game ended"""
         self.update_high_score("brick_game", score)
-        # Remove auto-close timer
-        self.return_to_launcher()
-    
+        # Don't automatically return - wait for game window to close
+        
     def on_memory_game_ended(self, moves):
-        """Handle memory game ended"""
-        current_high = self.settings["high_scores"].get("memory_game", 999)
-        if moves < current_high:
+        """Handle memory game ended (lower moves is better)"""
+        current_best = self.settings["high_scores"].get("memory_game", 999)
+        if moves < current_best:
             self.settings["high_scores"]["memory_game"] = moves
             self.save_settings()
             self.update_score_display()
-        # Remove auto-close timer
-        self.return_to_launcher()
+        # Don't automatically return - wait for game window to close
         
     def return_to_launcher(self):
         """Return to launcher after game ends"""
         if self.active_game:
-            self.active_game.close()
-            self.active_game = None
+            # Game window still exists, wait for it to close
+            return
         self.fade_in()
         
     def close_launcher(self):
@@ -378,22 +365,6 @@ class GameLauncher(QMainWindow):
         """Handle key press events"""
         if event.key() == Qt.Key.Key_Escape:
             self.close_launcher()
-    
-    def setup_global_shortcut(self):
-        """Setup global shortcut to show/hide launcher"""
-        self.shortcut = QShortcut(QKeySequence("Space+G"), self)
-        self.shortcut.activated.connect(self.toggle_visibility)
-        
-    def toggle_visibility(self):
-        """Toggle launcher visibility"""
-        if self.isVisible():
-            self.fade_out()
-        else:
-            # Bring window to front
-            self.fade_in()
-            self.setWindowState(self.windowState() & ~Qt.WindowState.WindowMinimized)
-            self.activateWindow()
-            win32gui.SetForegroundWindow(int(self.winId()))
 
 
 def main():
@@ -407,11 +378,6 @@ def main():
     
     launcher = GameLauncher()
     launcher.show()
-    
-    # Set window attributes for startup
-    hwnd = int(launcher.winId())
-    win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, 0, 0, 
-                         win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
     
     sys.exit(app.exec())
 

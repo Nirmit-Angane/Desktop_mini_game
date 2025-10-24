@@ -399,28 +399,12 @@ class BrickBreakerGame(QMainWindow):
         
         if won:
             self.game_over_label.setText(
-                "🎉 VICTORY! 🎉" + f"🧱 Score: {self.score}\n" 
+                f"🎉 VICTORY! 🎉🧱 Score: {self.score}\nAll Bricks Destroyed!"
             )
         else:
             self.game_over_label.setText(
-                "💥 GAME OVER 💥\n" + f"🧱 Score: {self.score}\n"
-
+                f"💥 GAME OVER 💥🧱 Score: {self.score}"
             )
-        
-        # Update the game over label style to ensure proper spacing
-        self.game_over_label.setStyleSheet("""
-            QLabel {
-                color: white;
-                background-color: rgba(0, 0, 0, 220);
-                border: 3px solid rgba(255, 150, 100, 200);
-                border-radius: 40px;
-                font-size: 32px;
-                font-weight: bold;
-                padding: 40px;
-                margin: 20px;
-                line-height: 1.5;
-            }
-        """)
         
         self.game_over_label.show()
         self.update()

@@ -77,7 +77,7 @@ class Card(QPushButton):
                     background-color: rgba(50, 90, 160, 180);
                 }
             """)
-            self.setText("❔")
+            self.setText("❓")
     
     def flip_to_show(self):
         """Flip card to show icon"""
@@ -537,10 +537,9 @@ class MemoryMatchGame(QMainWindow):
         time_str = f"{minutes:02d}:{seconds:02d}"
         
         self.win_label.setText(
-            f"🎉 YOU WIN! 🎉\n\n"
+            f"🎉 YOU WIN! 🎉"
             f"Completed in {self.moves} moves\n"
-            f"Time: {time_str}\n\n"
-            f"Returning to launcher..."
+            f"Time: {time_str}"
         )
         
         # Position and show win label
@@ -576,6 +575,7 @@ class MemoryMatchGame(QMainWindow):
         
         # Emit score and return to launcher after 2 seconds
         QTimer.singleShot(2000, lambda: self.game_ended.emit(self.moves))
+        QTimer.singleShot(2000, self.close)
     
     def restart_game(self):
         """Restart the game"""
