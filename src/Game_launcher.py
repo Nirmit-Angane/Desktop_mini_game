@@ -77,7 +77,8 @@ class GameLauncher(QMainWindow):
                 self.settings = {
                     "high_scores": {
                         "click_game": 0,
-                        "brick_game": 0
+                        "brick_game": 0,
+                        "memory_game": 999  # Lower is better for memory game
                     }
                 }
                 self.save_settings()
@@ -85,7 +86,8 @@ class GameLauncher(QMainWindow):
             self.settings = {
                 "high_scores": {
                     "click_game": 0,
-                    "brick_game": 0
+                    "brick_game": 0,
+                    "memory_game": 999
                 }
             }
     
@@ -252,8 +254,12 @@ class GameLauncher(QMainWindow):
         """Update the score display label"""
         click_score = self.settings["high_scores"].get("click_game", 0)
         brick_score = self.settings["high_scores"].get("brick_game", 0)
+        memory_score = self.settings["high_scores"].get("memory_game", 999)
+        
         self.score_label.setText(
-            f"🏆 High Scores  |  🎯 Click: {click_score}  |  🧱 Brick: {brick_score}"
+            f"🏆 High Scores  |  🎯 Click: {click_score}  |  "
+            f"🧱 Brick: {brick_score}  |  "
+            f"🧠 Memory: {memory_score} moves"
         )
         
     def setup_animations(self):
@@ -321,7 +327,12 @@ class GameLauncher(QMainWindow):
         
     def on_memory_game_ended(self, moves):
         """Handle memory game ended"""
-        # Optional: Add high score tracking for memory game if desired
+        # Update high score if moves is lower (better score)
+        current_high = self.settings["high_scores"].get("memory_game", 999)
+        if moves < current_high:
+            self.settings["high_scores"]["memory_game"] = moves
+            self.save_settings()
+            self.update_score_display()
         QTimer.singleShot(2000, self.return_to_launcher)
         
     def return_to_launcher(self):
