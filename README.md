@@ -48,50 +48,90 @@ All games are fully responsive and optimized for smooth performance.
 │   └── Game_launcher.py<br>
 └── <b>README.md</b><br>
 
-<style>
-.code-box {
-  background-color: #21252b;   /* Dark background */
-  color: #abb2bf;              /* Light text */
-  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; /* Code font */
-  padding: 15px;               /* Inner spacing */
-  border-radius: 4px;          /* Rounded corners */
-  line-height: 1.5;            /* Comfortable line height */
-  white-space: pre;            /* Preserve spacing and line breaks */
-  overflow-x: auto;            /* Allow horizontal scrolling if needed */
-  border: 1px solid #3a3f4b;   /* Subtle border for contrast */
-  width: 500px;
-}
-</style>
 
 ## ⚙️ Installation & Setup  
 
 ### 1️⃣ Clone the Repository  
-<div class="code-box">git clone 
+<div style="background-color: #21252b;   
+  color: #abb2bf;              
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+  padding: 15px;               
+  border-radius: 4px;          
+  line-height: 1.5;            
+  white-space: pre;            
+  overflow-x: auto;            
+  border: 1px solid #3a3f4b;   
+  width: 500px;">git clone 
 https://github.com/username/Desktop_Mini_Game.git
 cd Desktop_Mini_Game</div>
 
 ### 2️⃣ Install Python
 Make sure Python 3.10+ is installed.
 👉 Download Python here
-<div class="code-box">https://www.python.org/downloads/</div>
+<div style="background-color: #21252b;   
+  color: #abb2bf;              
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+  padding: 15px;               
+  border-radius: 4px;          
+  line-height: 1.5;            
+  white-space: pre;            
+  overflow-x: auto;            
+  border: 1px solid #3a3f4b;   
+  width: 500px;">https://www.python.org/downloads/</div>
 
 ### 3️⃣ Install Dependencies
 
-<div class="code-box">pip install PyQt6 pyautogui</div><br>
+<div style="background-color: #21252b;   
+  color: #abb2bf;              
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+  padding: 15px;               
+  border-radius: 4px;          
+  line-height: 1.5;            
+  white-space: pre;            
+  overflow-x: auto;            
+  border: 1px solid #3a3f4b;   
+  width: 500px;">pip install PyQt6 pyautogui</div><br>
 
 
 --- 
 
 ### ▶️ Run the Game Launcher
 
-<div class="code-box">python src/Game_launcher.py</div>
+<div style="background-color: #21252b;   
+  color: #abb2bf;              
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+  padding: 15px;               
+  border-radius: 4px;          
+  line-height: 1.5;            
+  white-space: pre;            
+  overflow-x: auto;            
+  border: 1px solid #3a3f4b;   
+  width: 500px;">python src/Game_launcher.py</div>
 <h3>OR</h3>
-<div class="code-box">Desktop_mini_game/Game_luncher.exe</div><br>
+<div style="background-color: #21252b;   
+  color: #abb2bf;              
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+  padding: 15px;               
+  border-radius: 4px;          
+  line-height: 1.5;            
+  white-space: pre;            
+  overflow-x: auto;            
+  border: 1px solid #3a3f4b;   
+  width: 500px;">Desktop_mini_game/Game_luncher.exe</div><br>
 
 ---
 
 ### 💾 Pre-Installed Libraries
-<div class="code-box"><table>
+<div style="background-color: #21252b;   
+  color: #abb2bf;              
+  font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace; 
+  padding: 15px;               
+  border-radius: 4px;          
+  line-height: 1.5;            
+  white-space: pre;            
+  overflow-x: auto;            
+  border: 1px solid #3a3f4b;   
+  width: 500px;"><table>
     <thead>
         <tr>
             <th>Library</th>
