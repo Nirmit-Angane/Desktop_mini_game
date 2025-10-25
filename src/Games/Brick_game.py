@@ -196,7 +196,7 @@ class BrickBreakerGame(QMainWindow):
         
         # Instructions
         self.instructions_label = QLabel(
-            "Use ← → Arrow Keys or Mouse to Move Paddle\nPress SPACE to Launch Ball",
+            "Mouse to Move Paddle\nPress LMB to Launch Ball",
             self
         )
         self.instructions_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
