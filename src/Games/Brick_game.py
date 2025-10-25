@@ -1,5 +1,5 @@
 """
-Full-Screen Brick Breaker Game with Transparent Background
+Full-Screen Brick Breaker Game with Transparent Background (Final Version)
 Place this file as: games/brick_game.py
 """
 
@@ -140,12 +140,12 @@ class BrickBreakerGame(QMainWindow):
         cols = (self.width() - 100) // (brick_width + spacing)
         
         colors = [
-            QColor(255, 100, 100),  # Red
-            QColor(255, 180, 100),  # Orange
-            QColor(255, 255, 100),  # Yellow
-            QColor(100, 255, 100),  # Green
-            QColor(100, 180, 255),  # Blue
-            QColor(180, 100, 255),  # Purple
+            QColor(255, 100, 100),
+            QColor(255, 180, 100),
+            QColor(255, 255, 100),
+            QColor(100, 255, 100),
+            QColor(100, 180, 255),
+            QColor(180, 100, 255),
         ]
         
         for row in range(rows):
@@ -153,7 +153,7 @@ class BrickBreakerGame(QMainWindow):
                 x = start_x + col * (brick_width + spacing)
                 y = start_y + row * (brick_height + spacing)
                 color = colors[row % len(colors)]
-                hits = 1 if row < 4 else 2  # Last 2 rows need 2 hits
+                hits = 1 if row < 4 else 2
                 self.bricks.append(Brick(x, y, brick_width, brick_height, color, hits))
     
     def setup_ui(self):
@@ -242,7 +242,7 @@ class BrickBreakerGame(QMainWindow):
         # Game over label
         self.game_over_label = QLabel("", self)
         self.game_over_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.game_over_label.setGeometry(0, self.height()//2 - 100, self.width(), 200)
+        self.game_over_label.setGeometry(0, self.height()//2 - 150, self.width(), 180)
         self.game_over_label.setStyleSheet("""
             QLabel {
                 color: white;
@@ -255,6 +255,34 @@ class BrickBreakerGame(QMainWindow):
             }
         """)
         self.game_over_label.hide()
+        
+        # Return to menu button
+        self.return_menu_button = QPushButton("🏠 Return to Launcher", self)
+        self.return_menu_button.setGeometry(
+            self.width()//2 - 150,
+            self.height()//2 + 80,
+            300, 60
+        )
+        self.return_menu_button.clicked.connect(self.return_to_launcher)
+        self.return_menu_button.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(70, 150, 230, 220);
+                color: white;
+                border: 3px solid rgba(100, 200, 255, 200);
+                border-radius: 30px;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 15px;
+            }
+            QPushButton:hover {
+                background-color: rgba(90, 170, 250, 250);
+                font-size: 22px;
+            }
+            QPushButton:pressed {
+                background-color: rgba(60, 140, 220, 220);
+            }
+        """)
+        self.return_menu_button.hide()
         
         # Close button
         self.close_button = QPushButton("✕", self)
@@ -298,7 +326,7 @@ class BrickBreakerGame(QMainWindow):
         self.lives = 3
         self.update_score()
         self.update_lives()
-        self.game_timer.start(16)  # ~60 FPS
+        self.game_timer.start(16)
     
     def game_loop(self):
         """Main game loop"""
@@ -326,7 +354,6 @@ class BrickBreakerGame(QMainWindow):
             paddle_rect = self.paddle.get_rect()
             if ball_rect.intersects(paddle_rect) and self.ball.speed_y > 0:
                 self.ball.bounce_y()
-                # Add angle based on where ball hits paddle
                 hit_pos = (self.ball.x - self.paddle.x) / self.paddle.width
                 self.ball.speed_x = (hit_pos - 0.5) * 10
                 
@@ -346,7 +373,6 @@ class BrickBreakerGame(QMainWindow):
                         except:
                             pass
                     
-                    # Determine bounce direction
                     brick_rect = brick.get_rect()
                     if abs(self.ball.x - brick_rect.center().x()) > abs(self.ball.y - brick_rect.center().y()):
                         self.ball.bounce_x()
@@ -390,6 +416,10 @@ class BrickBreakerGame(QMainWindow):
         hearts = "❤️" * self.lives
         self.lives_label.setText(f"Lives: {hearts}")
     
+    def return_to_launcher(self):
+        """Return to the game launcher"""
+        self.close()
+    
     def end_game(self, won):
         """End the game"""
         self.game_active = False
@@ -399,14 +429,15 @@ class BrickBreakerGame(QMainWindow):
         
         if won:
             self.game_over_label.setText(
-                f"🎉 VICTORY! 🎉🧱 Score: {self.score}\nAll Bricks Destroyed!"
+                f"🎉 VICTORY! 🎉\n🧱 Score: {self.score}\nAll Bricks Destroyed!"
             )
         else:
             self.game_over_label.setText(
-                f"💥 GAME OVER 💥🧱 Score: {self.score}"
+                f"💥 GAME OVER 💥\n🧱 Score: {self.score}\nNo Lives Remaining!"
             )
         
         self.game_over_label.show()
+        self.return_menu_button.show()
         self.update()
         
         # Emit signal with score
@@ -415,7 +446,6 @@ class BrickBreakerGame(QMainWindow):
     def keyPressEvent(self, event):
         """Handle key press"""
         self.keys_pressed.add(event.key())
-        
         if event.key() == Qt.Key.Key_Space and self.ball_attached:
             self.ball_attached = False
     
@@ -469,7 +499,6 @@ class BrickBreakerGame(QMainWindow):
         # Draw bricks
         for brick in self.bricks:
             if not brick.destroyed:
-                # Adjust opacity based on hits remaining
                 color = QColor(brick.color)
                 if brick.hits < brick.max_hits:
                     color.setAlpha(150)
@@ -484,3 +513,16 @@ class BrickBreakerGame(QMainWindow):
         super().resizeEvent(event)
         self.close_button.move(self.width() - 70, 20)
         self.lives_label.move(self.width() - 240, 20)
+        self.start_button.setGeometry(
+            self.width()//2 - 150,
+            self.height()//2,
+            300, 80
+        )
+        self.title_label.setGeometry(0, self.height()//3, self.width(), 80)
+        self.instructions_label.setGeometry(0, self.height()//2 + 100, self.width(), 60)
+        self.game_over_label.setGeometry(0, self.height()//2 - 150, self.width(), 180)
+        self.return_menu_button.setGeometry(
+            self.width()//2 - 150,
+            self.height()//2 + 80,
+            300, 60
+        )

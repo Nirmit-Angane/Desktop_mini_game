@@ -1,5 +1,5 @@
 """
-Full-Screen Click Speed Game with Transparent Background
+Full-Screen Click Speed Game with Transparent Background (Final Version)
 Place this file as: games/click_game.py
 """
 
@@ -38,12 +38,10 @@ class ClickSpeedGame(QMainWindow):
         
     def setup_window(self):
         """Configure full-screen transparent window"""
-        # Get screen geometry
         from PyQt6.QtWidgets import QApplication
         screen = QApplication.primaryScreen().geometry()
         self.setGeometry(screen)
         
-        # Make window frameless and transparent
         self.setWindowFlags(
             Qt.WindowType.FramelessWindowHint | 
             Qt.WindowType.WindowStaysOnTopHint |
@@ -57,10 +55,10 @@ class ClickSpeedGame(QMainWindow):
         self.score = 0
         self.game_active = False
         self.current_circle = None
-        self.initial_radius = 75  # ~2cm
+        self.initial_radius = 75
         self.min_radius = 20
         self.radius_decrease = 3
-        self.time_limit = 2000  # 2 seconds
+        self.time_limit = 2000
         self.circle_opacity = 1.0
         self.fade_direction = 1
         
@@ -139,7 +137,7 @@ class ClickSpeedGame(QMainWindow):
         # Game over label
         self.game_over_label = QLabel("", self)
         self.game_over_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.game_over_label.setGeometry(0, self.height()//2 - 100, self.width(), 200)
+        self.game_over_label.setGeometry(0, self.height()//2 - 150, self.width(), 180)
         self.game_over_label.setStyleSheet("""
             QLabel {
                 color: white;
@@ -152,6 +150,34 @@ class ClickSpeedGame(QMainWindow):
             }
         """)
         self.game_over_label.hide()
+        
+        # Return to menu button
+        self.return_menu_button = QPushButton("🏠 Return to Launcher", self)
+        self.return_menu_button.setGeometry(
+            self.width()//2 - 150,
+            self.height()//2 + 80,
+            300, 60
+        )
+        self.return_menu_button.clicked.connect(self.return_to_launcher)
+        self.return_menu_button.setStyleSheet("""
+            QPushButton {
+                background-color: rgba(70, 150, 230, 220);
+                color: white;
+                border: 3px solid rgba(100, 200, 255, 200);
+                border-radius: 30px;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 15px;
+            }
+            QPushButton:hover {
+                background-color: rgba(90, 170, 250, 250);
+                font-size: 22px;
+            }
+            QPushButton:pressed {
+                background-color: rgba(60, 140, 220, 220);
+            }
+        """)
+        self.return_menu_button.hide()
         
         # Close button
         self.close_button = QPushButton("✕", self)
@@ -173,19 +199,15 @@ class ClickSpeedGame(QMainWindow):
         
     def setup_timers(self):
         """Setup game timers"""
-        # Game over timer
         self.game_timer = QTimer()
         self.game_timer.timeout.connect(self.game_over)
         
-        # Animation timer
         self.animation_timer = QTimer()
         self.animation_timer.timeout.connect(self.update_animation)
         
-        # Display timer
         self.display_timer = QTimer()
         self.display_timer.timeout.connect(self.update_timer_display)
         
-        # Sound effect
         try:
             self.click_sound = QSoundEffect()
             self.click_sound.setVolume(0.3)
@@ -284,6 +306,10 @@ class ClickSpeedGame(QMainWindow):
         """Update score display"""
         self.score_label.setText(f"Score: {self.score}")
     
+    def return_to_launcher(self):
+        """Return to the game launcher"""
+        self.close()
+    
     def game_over(self):
         """End the game"""
         self.game_active = False
@@ -296,16 +322,16 @@ class ClickSpeedGame(QMainWindow):
         
         # Show game over message
         self.game_over_label.setText(
-            f"⏱️ TIME'S UP!\n🎯 Your Score: {self.score}"
+            f"⏱️ TIME'S UP!\n 🎯 Your Score: {self.score}"
         )
         self.game_over_label.show()
+        self.return_menu_button.show()
         
         self.update()
         
         # Emit signal with score
         self.game_ended.emit(self.score)
-        QTimer.singleShot(2000, self.close)
-        
+    
     def mousePressEvent(self, event):
         """Handle mouse clicks"""
         if event.button() == Qt.MouseButton.LeftButton:
@@ -362,3 +388,15 @@ class ClickSpeedGame(QMainWindow):
         super().resizeEvent(event)
         self.close_button.move(self.width() - 70, 20)
         self.timer_label.move(self.width() - 240, 40)
+        self.start_button.setGeometry(
+            self.width()//2 - 150,
+            self.height()//2,
+            300, 80
+        )
+        self.title_label.setGeometry(0, self.height()//3, self.width(), 80)
+        self.game_over_label.setGeometry(0, self.height()//2 - 150, self.width(), 180)
+        self.return_menu_button.setGeometry(
+            self.width()//2 - 150,
+            self.height()//2 + 80,
+            300, 60
+        )

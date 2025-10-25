@@ -268,12 +268,23 @@ class GameLauncher(QMainWindow):
         """Fade out the launcher"""
         self.fade_animation.setStartValue(1.0)
         self.fade_animation.setEndValue(0.0)
+        try:
+            self.fade_animation.finished.disconnect()  # Clear previous connections
+        except Exception:
+            pass
         self.fade_animation.finished.connect(self.hide)
         self.fade_animation.start()
         
     def fade_in(self):
         """Fade in the launcher"""
-        self.show()
+        self.show()  # MUST show first!
+        self.raise_()  # Bring to front
+        self.activateWindow()  # Activate window
+        
+        try:
+            self.fade_animation.finished.disconnect()  # Clear previous connections
+        except Exception:
+            pass
         self.fade_animation.setStartValue(0.0)
         self.fade_animation.setEndValue(1.0)
         self.fade_animation.start()
@@ -287,6 +298,7 @@ class GameLauncher(QMainWindow):
         """Show click game after fade out"""
         self.active_game = ClickSpeedGame(self)
         self.active_game.game_ended.connect(self.on_click_game_ended)
+        self.active_game.destroyed.connect(self.on_game_window_closed)
         self.active_game.show()
         
     def launch_brick_game(self):
@@ -298,6 +310,7 @@ class GameLauncher(QMainWindow):
         """Show brick game after fade out"""
         self.active_game = BrickBreakerGame(self)
         self.active_game.game_ended.connect(self.on_brick_game_ended)
+        self.active_game.destroyed.connect(self.on_game_window_closed)
         self.active_game.show()
         
     def launch_memory_game(self):
@@ -309,17 +322,26 @@ class GameLauncher(QMainWindow):
         """Show memory game after fade out"""
         self.active_game = MemoryMatchGame(self)
         self.active_game.game_ended.connect(self.on_memory_game_ended)
+        self.active_game.destroyed.connect(self.on_game_window_closed)
         self.active_game.show()
+    
+    def on_game_window_closed(self):
+        """Called when game window is closed/destroyed"""
+        self.active_game = None
+        # Return to launcher after game window closes
+        QTimer.singleShot(100, self.fade_in)
         
     def on_click_game_ended(self, score):
         """Handle click game ended"""
         self.update_high_score("click_game", score)
-        # Don't automatically return - wait for game window to close
+        # Schedule backup return in case destroyed signal fails
+        QTimer.singleShot(5000, self.ensure_launcher_visible)
         
     def on_brick_game_ended(self, score):
         """Handle brick game ended"""
         self.update_high_score("brick_game", score)
-        # Don't automatically return - wait for game window to close
+        # Schedule backup return in case destroyed signal fails
+        QTimer.singleShot(5000, self.ensure_launcher_visible)
         
     def on_memory_game_ended(self, moves):
         """Handle memory game ended (lower moves is better)"""
@@ -328,14 +350,14 @@ class GameLauncher(QMainWindow):
             self.settings["high_scores"]["memory_game"] = moves
             self.save_settings()
             self.update_score_display()
-        # Don't automatically return - wait for game window to close
-        
-    def return_to_launcher(self):
-        """Return to launcher after game ends"""
-        if self.active_game:
-            # Game window still exists, wait for it to close
-            return
-        self.fade_in()
+        # Schedule backup return in case destroyed signal fails
+        QTimer.singleShot(5000, self.ensure_launcher_visible)
+    
+    def ensure_launcher_visible(self):
+        """Backup method to ensure launcher is visible"""
+        if not self.isVisible():
+            # fallback to fade_in() to restore launcher if it's hidden
+            self.fade_in()
         
     def close_launcher(self):
         """Close the launcher and all games"""
